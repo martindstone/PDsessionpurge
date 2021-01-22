@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 from argparse import ArgumentParser
 import pd
@@ -16,6 +17,10 @@ parser.add_argument(
 parser.add_argument(
     '-b', '--before', dest='before', required=True,
     help='Delete sessions before this time/date'
+)
+parser.add_argument(
+    '-m', '--mobile_only', default=False, action='store_true', dest='mobile_only',
+    help='Only delete mobile app sessions'
 )
 parser.add_argument(
     '-f', '--force', default=False, action='store_true', dest='force',
@@ -48,6 +53,10 @@ print("Getting users... ", end='', flush=True)
 users = pd.fetch(token=token, endpoint='users')
 print(f"got {len(users)}")
 
+pattern = re.compile('.*')
+if args.mobile_only:
+    pattern = re.compile('^PagerDuty Mobile')
+
 for user in users:
     print(f"Getting sessions for user {user['email']} ({user['id']})... ", end='', flush=True)
     sessions = pd.fetch(token=token, endpoint=f"users/{user['id']}/sessions")
@@ -55,8 +64,8 @@ for user in users:
     for session in sessions:
         created_at = dateparser.parse(session['created_at'])
         created_at_utc = datetime.datetime.utcfromtimestamp(float(created_at.strftime("%s")))
-        if created_at_utc < before_utc:
-            message = f"Delete session {session['id']} created at {created_at_utc.strftime('%c UTC')}"
+        if (created_at_utc < before_utc and pattern.search(session['summary'])):
+            message = f"Delete session {session['id']} ({session['summary']}) created at {created_at_utc.strftime('%c UTC')}"
             if args.dry_run:
                 print(f"  (dry run) {message}")
             else:
@@ -67,4 +76,4 @@ for user in users:
                     print("Failed!")
                 print("done")
         else:
-            print(f"  Skip session {session['id']} created at {created_at_utc.strftime('%c UTC')}")
+            print(f"  Skip session {session['id']} ({session['summary']}) created at {created_at_utc.strftime('%c UTC')}")
