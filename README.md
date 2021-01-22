@@ -12,14 +12,14 @@ Purge PD user sessions that were created before a date/time
 ## Usage:
 
 ```
-purge.py [-h] -t TOKEN -b BEFORE [-f] [-d]
-
+purge.py [-h] -t TOKEN -b BEFORE [-m] [-f] [-d]
 optional arguments:
   -h, --help            show this help message and exit
   -t TOKEN, --token TOKEN
                         PagerDuty API token to use
   -b BEFORE, --before BEFORE
                         Delete sessions before this time/date
+  -m, --mobile_only     Only delete mobile app sessions
   -f, --force           Don't prompt to confirm, just delete the sessions (dangerous maybe?)
   -d, --dry-run         Dry run - don't actually delete anything
 ```
